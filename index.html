@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recherche NPEC final</title>
+  <meta name="description" content="Recherche du NPEC final à partir d'un couple RNCP + CPNE" />
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color-scheme: light dark; }
+    body { margin:0; padding:24px; background:#f7f7f8; }
+    .card { max-width: 720px; margin: 0 auto; background:#fff; padding:24px; border-radius:16px; box-shadow:0 6px 24px rgba(0,0,0,.06); }
+    h1 { margin:0 0 8px; font-size:1.5rem; }
+    p.muted { color:#666; margin:0 0 16px; }
+    label { display:block; margin-top:12px; margin-bottom:6px; font-weight:600; }
+    input { width:100%; padding:12px; font-size:1rem; border:1px solid #ddd; border-radius:10px; }
+    button { margin-top:16px; padding:12px 16px; border:0; border-radius:12px; font-weight:700; background:#111; color:#fff; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
+    .result { margin-top:16px; padding:16px; border-radius:12px; background:#f0f3f7; word-break:break-word; }
+    .error { background:#ffe9e9; color:#b00020; }
+    code.k { background:#eee; padding:2px 6px; border-radius:8px; }
+    footer { margin-top:24px; text-align:center; color:#666; font-size:.9rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Recherche <em>NPEC final</em></h1>
+    <p class="muted">Indiquez <strong>RNCP</strong> et <strong>CPNE</strong>, puis lancez la recherche. Les données proviennent de <code class="k">data/index.json</code>.</p>
+
+    <label for="rncp">RNCP</label>
+    <input id="rncp" placeholder="Ex : RNCP12345" autocomplete="off" />
+
+    <label for="cpne">CPNE</label>
+    <input id="cpne" placeholder="Ex : CPNE-XYZ" autocomplete="off" />
+
+    <button id="btn">Chercher</button>
+
+    <div id="out" class="result" style="display:none;"></div>
+
+    <footer>
+      <a href="builder.html">Mettre à jour les données (CSV → index.json)</a>
+    </footer>
+  </div>
+
+<script>
+let INDEX = null;
+
+function normalize(str) {
+  return (str || '').toString().trim().normalize('NFD').replace(/\p{Diacritic}/gu,'').toUpperCase();
+}
+
+async function loadIndex() {
+  const res = await fetch('data/index.json', {cache: 'no-store'});
+  if (!res.ok) throw new Error('Impossible de charger data/index.json');
+  INDEX = await res.json();
+}
+
+async function ensureIndex() {
+  if (!INDEX) await loadIndex();
+}
+
+async function search() {
+  const out = document.getElementById('out');
+  out.style.display = 'none'; out.classList.remove('error'); out.textContent='';
+  const btn = document.getElementById('btn'); btn.disabled = true;
+  try {
+    await ensureIndex();
+    const rncp = document.getElementById('rncp').value;
+    const cpne = document.getElementById('cpne').value;
+    if (!rncp || !cpne) { throw new Error('Merci de renseigner RNCP et CPNE.'); }
+    const key = normalize(rncp) + '|' + normalize(cpne);
+    if (Object.prototype.hasOwnProperty.call(INDEX, key)) {
+      const npec = INDEX[key] ?? '';
+      out.innerHTML = `
+        <div><strong>RNCP</strong> : ${rncp}</div>
+        <div><strong>CPNE</strong> : ${cpne}</div>
+        <div><strong>NPEC final</strong> : <code>${npec}</code></div>`;
+    } else {
+      out.classList.add('error');
+      out.innerHTML = `
+        <div><strong>RNCP</strong> : ${rncp}</div>
+        <div><strong>CPNE</strong> : ${cpne}</div>
+        <div><strong>Erreur</strong> : Aucun résultat trouvé.</div>`;
+    }
+    out.style.display = 'block';
+  } catch (e) {
+    out.classList.add('error');
+    out.textContent = e.message || 'Erreur';
+    out.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('btn').addEventListener('click', search);
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter') search(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CSV → index.json (RNCP+CPNE → NPEC)</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin:0; padding:24px; background:#f7f7f8; }
+    .card { max-width: 900px; margin: 0 auto; background:#fff; padding:24px; border-radius:16px; box-shadow:0 6px 24px rgba(0,0,0,.06); }
+    h1 { margin:0 0 8px; font-size:1.4rem; }
+    p.muted { color:#666; margin:0 0 16px; }
+    input[type="file"] { margin:12px 0; }
+    select, input[type="checkbox"] { margin:0 8px 0 0; }
+    pre { background:#0b1020; color:#fff; padding:16px; border-radius:12px; overflow:auto; }
+    button { margin-top:12px; padding:10px 14px; border:0; border-radius:10px; font-weight:700; background:#111; color:#fff; cursor:pointer; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .kv { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <div class="card">
+    <h1>Générer <code>data/index.json</code> depuis votre CSV</h1>
+    <p class="muted">Sélectionnez votre CSV (séparateur virgule). Le script crée un index: <strong>clé</strong> = RNCP|CPNE (normalisés) → <strong>valeur</strong> = NPEC final.</p>
+
+    <input type="file" id="file" accept=".csv,text/csv" />
+
+    <div class="row">
+      <label>Colonnes (0 = première) :</label>
+      <label>RNCP <input type="number" id="col_rncp" value="0" min="0" style="width:80px"></label>
+      <label>CPNE <input type="number" id="col_cpne" value="5" min="0" style="width:80px"></label>
+      <label>NPEC final <input type="number" id="col_npec" value="6" min="0" style="width:100px"></label>
+      <label><input type="checkbox" id="hasHeader" checked> Mon CSV contient une première ligne d'en-têtes</label>
+    </div>
+
+    <button id="build">Construire l'index</button>
+    <button id="download" style="display:none">Télécharger index.json</button>
+
+    <h3>Aperçu (premières paires clé→valeur)</h3>
+    <pre id="preview" style="max-height:320px"></pre>
+  </div>
+
+<script>
+function normalize(str) {
+  return (str || '').toString().trim().normalize('NFD').replace(/\p{Diacritic}/gu,'').toUpperCase();
+}
+
+let INDEX = null;
+
+document.getElementById('build').addEventListener('click', () => {
+  const file = document.getElementById('file').files[0];
+  if (!file) { alert('Sélectionnez un fichier CSV'); return; }
+
+  const cRNCP = parseInt(document.getElementById('col_rncp').value, 10);
+  const cCPNE = parseInt(document.getElementById('col_cpne').value, 10);
+  const cNPEC = parseInt(document.getElementById('col_npec').value, 10);
+  const hasHeader = document.getElementById('hasHeader').checked;
+
+  Papa.parse(file, {
+    complete: (res) => {
+      const rows = res.data;
+      const map = {};
+      for (let i = 0; i < rows.length; i++) {
+        if (hasHeader && i === 0) continue;
+        const row = rows[i];
+        if (!row || typeof row[cRNCP] === 'undefined' || typeof row[cCPNE] === 'undefined' || typeof row[cNPEC] === 'undefined') continue;
+        const rncp = normalize(row[cRNCP]);
+        const cpne = normalize(row[cCPNE]);
+        const npec = (row[cNPEC] ?? '').toString().trim();
+        if (!rncp || !cpne) continue;
+        const key = rncp + '|' + cpne;
+        map[key] = npec; // si doublon, dernière occurrence gagnante
+      }
+      INDEX = map;
+
+      // Aperçu
+      const entries = Object.entries(map).slice(0, 20).map(([k,v]) => k + ' → ' + v).join('\n');
+      document.getElementById('preview').textContent = entries || '(vide)';
+      document.getElementById('download').style.display = 'inline-block';
+    },
+    error: (err) => alert('Erreur de parsing CSV : ' + err.message)
+  });
+});
+
+document.getElementById('download').addEventListener('click', () => {
+  if (!INDEX) return;
+  const blob = new Blob([JSON.stringify(INDEX, null, 2)], {type: 'application/json;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'index.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+</script>
+</body>
+</html>
