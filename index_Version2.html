@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Recherche dans un fichier Excel — NPEC</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- SheetJS pour parser Excel côté client -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <!-- PapaParse pour compatibilité CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <main>
+    <h1>Recherche dans le fichier (Excel / CSV) — NPEC</h1>
+
+    <section class="load">
+      <p>Chargez un fichier Excel (.xlsx, .xls, .xlsb) ou CSV depuis votre navigateur, ou tentez de récupérer le fichier depuis le dépôt.</p>
+
+      <div class="row">
+        <label for="file">Charger un fichier local :</label>
+        <input id="file" type="file" accept=".xlsx,.xls,.xlsb,.csv,text/csv" />
+      </div>
+
+      <div class="row">
+        <button id="load-remote">Charger "Referentiel - Copie.xlsx" depuis le dépôt</button>
+      </div>
+
+      <div id="status" class="status">Aucun fichier chargé.</div>
+    </section>
+
+    <section class="filter" aria-live="polite">
+      <h2>Filtrer par deux critères</h2>
+      <div class="row">
+        <label for="col1">Colonne 1 :</label>
+        <select id="col1"></select>
+        <input id="val1" placeholder="Valeur pour colonne 1" />
+      </div>
+
+      <div class="row">
+        <label for="col2">Colonne 2 :</label>
+        <select id="col2"></select>
+        <input id="val2" placeholder="Valeur pour colonne 2" />
+      </div>
+
+      <div class="row options">
+        <label><input type="checkbox" id="useExact" /> Recherche exacte (sinon contient, insensible à la casse)</label>
+        <button id="search" disabled>Rechercher</button>
+        <button id="clear">Effacer</button>
+      </div>
+    </section>
+
+    <section class="results">
+      <h2>Résultats <span id="count">(0)</span></h2>
+      <div id="table-wrap"></div>
+    </section>
+
+    <footer>
+      <small>Page minimale pour filtrer un fichier Excel ou CSV par deux colonnes. Déployez sur GitHub Pages pour héberger.</small>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
