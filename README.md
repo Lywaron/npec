@@ -1,78 +1,32 @@
-# Recherche NPEC final — GitHub Pages (gratuit)
+```markdown
+# Recherche CSV simple — NPEC
 
-Ce dépôt contient une mini-application **100% statique** pour rechercher le **NPEC final** à partir d’un couple **RNCP + CPNE**.
+But : fournir une page web minimale qui permet de charger un fichier CSV (local ou depuis le même dépôt) et de rechercher une information en combinant deux critères.
 
-- Front : `index.html` (aucun serveur requis)
-- Données : `data/index.json` (clé = `RNCP|CPNE` *normalisés* → valeur = `NPEC final`)
-- Outil de génération : `builder.html` (convertit votre CSV → `data/index.json` côté navigateur)
+Fichiers fournis :
+- `index.html` : page web principale.
+- `style.css` : styles minimalistes.
+- `app.js` : logique JavaScript (utilise PapaParse pour parser le CSV côté client).
+- (Votre fichier) `Referentiel - Copie.csv` doit être placé à la racine du dépôt si vous voulez l'obtenir via le bouton "Charger Referentiel - Copie.csv".
 
----
+Utilisation :
+1. Déposez votre fichier CSV local dans la zone de fichier, ou cliquez sur "Charger Referentiel - Copie.csv" si le fichier est dans le dépôt.
+2. Choisissez les deux colonnes à utiliser comme critères (les listes déroulantes sont peuplées automatiquement après chargement).
+3. Entrez les valeurs recherchées dans les champs, puis cliquez sur "Rechercher".
+   - Par défaut la recherche est "contient" (insensible à la casse). Cochez "Recherche exacte" pour une égalité stricte.
+4. Les résultats s'affichent sous forme de tableau et le nombre de lignes retournées est indiqué.
 
-## 🚀 Publication sur GitHub Pages
+Déploiement (GitHub Pages) :
+- Poussez ces fichiers dans la branche `main` (ou `gh-pages`) de votre dépôt.
+- Activez GitHub Pages dans les paramètres du dépôt (Settings → Pages) en choisissant la branche contenant `index.html`.
+- La page sera disponible à l'URL GitHub Pages fournie par GitHub.
 
-1. Créez un dépôt sur GitHub (ex: `recherche-npec`).
-2. Uploadez tous les fichiers de ce pack (le dossier `data` inclus).
-3. Allez dans **Settings → Pages** :
-   - *Build and deployment* → **Source: Deploy from a branch**
-   - **Branch: main** / **/ (root)**
-4. Attendez ~30 secondes, votre site sera disponible à l’URL :  
-   `https://<votre-utilisateur>.github.io/<nom-du-depot>/`
+Remarques :
+- Le script utilise PapaParse (CDN) pour un parsing robuste (gestion des guillemets, champs vides, etc.).
+- L'interface laisse libre choix des deux colonnes à combiner : vous n'êtes pas obligé de préciser d'avance lesquelles. Cela vous permet d'explorer la table (ex : RNCP & CPNE, ou RNCP & NPEC final, etc.).
 
-> Astuce : Déposez un fichier `CNAME` à la racine si vous voulez un domaine personnalisé (optionnel).
-
----
-
-## 🔄 Mettre à jour les données (3–4 fois/an)
-
-Option A — **Builder dans le navigateur** (le plus simple)  
-1. Ouvrez `builder.html` **depuis GitHub Pages** (ou en local).  
-2. Sélectionnez votre CSV (séparateur virgule).  
-3. Vérifiez / ajustez les index colonnes : **RNCP=0, CPNE=5, NPEC final=6**.  
-4. Cliquez **Construire l’index** puis **Télécharger index.json**.  
-5. Dans le dépôt, remplacez `data/index.json` par le nouveau (Commit).  
-6. Rechargez votre site → c’est à jour.
-
-Option B — **Automatique via GitHub**  
-- Publiez votre CSV dans le repo et utilisez une action GitHub pour régénérer `data/index.json`. (bonus avancé, non nécessaire pour un usage 3–4x/an)
-
----
-
-## 🧪 Tester en local
-
-- Ouvrez simplement `index.html` dans votre navigateur.  
-- Si le navigateur bloque `fetch` en `file://`, servez le dossier avec un petit serveur local (ex: `python -m http.server`).
-
----
-
-## 🛠️ Format attendu du CSV
-
-- Séparateur : **virgule** `,`
-- 7 colonnes. Par défaut :
-  - Colonne 0 : **RNCP**
-  - Colonne 5 : **CPNE**
-  - Colonne 6 : **NPEC final**
-- Une **ligne d’en-tête** (cochez/décochez dans `builder.html` selon votre fichier)
-
----
-
-## 📁 Structure du dépôt
-
+Si vous voulez, je peux :
+- Adapter la page pour faire une recherche par correspondance exacte sur des colonnes précises par défaut (indiquez lesquelles).
+- Ajouter une exportation des résultats en CSV.
+- Rendre la recherche plus avancée (OR, comparateurs numériques, regex).
 ```
-/ (racine)
-  index.html          # UI de recherche
-  builder.html        # Générateur CSV -> data/index.json
-  data/
-    index.json        # Vos données (clé=RNCP|CPNE -> valeur=NPEC)
-  .nojekyll           # Laisser GitHub Pages servir /data tel quel
-  README.md
-```
-
----
-
-## 🧩 Personnalisation
-
-- Normalisation : accents supprimés, comparaison insensible à la casse.
-- Gestion des doublons : dernière occurrence gagnante (modifiable dans `builder.html`).
-- UI : ajustez le style dans `index.html` (CSS en tête).
-
-Bon déploiement ! 🎉
